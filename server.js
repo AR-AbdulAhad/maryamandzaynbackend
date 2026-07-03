@@ -1,9 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { existsSync } from "fs";
 import { initDB } from "./config/db.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -13,19 +14,35 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({
-  origin: [
-    "http://localhost:5173", "http://localhost:4173", "http://localhost:3001",
-    "https://maryamandzayn.com", "https://www.maryamandzayn.com",
-    "https://api.maryamandzayn.com",
-  ],
-  credentials: true,
-}));
-app.use(express.json());
+app.set("trust proxy", 1);
+
+app.use(helmet());
+
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map(s => s.trim())
+  : ["http://localhost:5173"];
+app.use(cors({ origin: corsOrigins, credentials: true }));
+
+app.use(express.json({ limit: "1mb" }));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", limiter);
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many login attempts" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/admin/login", loginLimiter);
+
 app.use("/uploads", express.static(join(__dirname, "uploads")));
-
-const publicPath = join(__dirname, "..", "dist");
-
 app.use("/api/videos", videoRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/feedback", feedbackRoutes);
@@ -34,25 +51,21 @@ app.get("/admin", (req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
 });
 
-if (existsSync(publicPath)) {
-  app.use(express.static(publicPath));
-  app.get("*", (req, res) => {
-    if (!req.path.startsWith("/api")) {
-      res.sendFile(join(publicPath, "index.html"));
-    }
-  });
-} else {
-  app.get("*", (req, res) => {
-    if (!req.path.startsWith("/api")) {
-      res.status(200).json({ message: "Maryam & Zayn API is running" });
-    }
-  });
-}
+app.get("*", (req, res) => {
+  if (!req.path.startsWith("/api")) {
+    res.json({ message: "Maryam & Zayn API is running" });
+  }
+});
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err.message);
+  res.status(500).json({ error: "Internal server error" });
+});
 
 async function start() {
   await initDB();
   app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
   });
 }
 start();

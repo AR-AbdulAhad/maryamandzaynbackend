@@ -1,6 +1,10 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "maryam-zayn-admin-secret-2026";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error("FATAL: JWT_SECRET not set in environment");
+  process.exit(1);
+}
 
 export function generateToken() {
   return jwt.sign({ role: "admin" }, JWT_SECRET, { expiresIn: "24h" });

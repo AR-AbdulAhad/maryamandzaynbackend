@@ -1,0 +1,14 @@
+{
+  "videos": [
+    {
+      "id": "3c051d40-4bb6-431b-b054-b197fb653533",
+      "title": "khalid",
+      "youtubeUrl": "https://youtu.be/raX82EvBzsw?si=ZLVtQPZYSJmnRjfY",
+      "youtubeId": "raX82EvBzsw",
+      "thumbnail": "",
+      "active": true,
+      "order": 1,
+      "createdAt": "2026-07-02T00:00:00.000Z"
+    }
+  ]
+}

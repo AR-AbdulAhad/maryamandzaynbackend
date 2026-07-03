@@ -1,8 +1,12 @@
 import { generateToken } from "../middleware/auth.js";
 import { createVideo, updateVideo, deleteVideo } from "../config/db.js";
 
-const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+const ADMIN_USER = process.env.ADMIN_USER;
+const ADMIN_PASS = process.env.ADMIN_PASS;
+if (!ADMIN_USER || !ADMIN_PASS) {
+  console.error("FATAL: ADMIN_USER and ADMIN_PASS must be set in environment");
+  process.exit(1);
+}
 
 export function login(req, res) {
   const { username, password } = req.body;
