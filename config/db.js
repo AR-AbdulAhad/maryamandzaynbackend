@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import crypto from "crypto";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import initSqlJs from "sql.js";
@@ -7,8 +8,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, "..", "data", "app.db");
 
 let db;
+let dbReady;
 
-async function initDB() {
+export async function initDB() {
+  if (db) return;
   const SQL = await initSqlJs();
   if (existsSync(DB_PATH)) {
     const buffer = readFileSync(DB_PATH);
@@ -40,9 +43,23 @@ async function initDB() {
     )
   `);
   saveDB();
+  dbReady = Promise.resolve();
+}
+
+async function ensureDB() {
+  if (!db) {
+    if (!dbReady) {
+      dbReady = initDB();
+    }
+    await dbReady;
+  }
 }
 
 function saveDB() {
+  const dir = dirname(DB_PATH);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   writeFileSync(DB_PATH, db.export());
 }
 
@@ -57,27 +74,26 @@ function query(sql, params = []) {
   return rows;
 }
 
-initDB().catch((err) => {
-  console.error("Failed to init DB:", err.message);
-  process.exit(1);
-});
-
 /* ── Videos ── */
 
-export function getAllVideos() {
+export async function getAllVideos() {
+  await ensureDB();
   return query('SELECT * FROM videos ORDER BY "order" ASC');
 }
 
-export function getActiveVideos() {
-  return query("SELECT * FROM videos WHERE active = 1 ORDER BY \"order\" ASC");
+export async function getActiveVideos() {
+  await ensureDB();
+  return query('SELECT * FROM videos WHERE active = 1 ORDER BY "order" ASC');
 }
 
-export function getVideoById(id) {
+export async function getVideoById(id) {
+  await ensureDB();
   const rows = query("SELECT * FROM videos WHERE id = ?", [id]);
   return rows.length ? rows[0] : null;
 }
 
-export function createVideo(videoData) {
+export async function createVideo(videoData) {
+  await ensureDB();
   const id = crypto.randomUUID();
   const rows = query("SELECT COUNT(*) as cnt FROM videos");
   const order = rows[0].cnt + 1;
@@ -86,10 +102,11 @@ export function createVideo(videoData) {
     [id, videoData.title, videoData.youtubeUrl, videoData.youtubeId, videoData.thumbnail || "", 1, order]
   );
   saveDB();
-  return getVideoById(id);
+  return await getVideoById(id);
 }
 
-export function updateVideo(id, updates) {
+export async function updateVideo(id, updates) {
+  await ensureDB();
   const fields = [];
   const values = [];
   if (updates.title !== undefined) { fields.push("title = ?"); values.push(updates.title); }
@@ -97,14 +114,15 @@ export function updateVideo(id, updates) {
   if (updates.youtubeId !== undefined) { fields.push("youtubeId = ?"); values.push(updates.youtubeId); }
   if (updates.thumbnail !== undefined) { fields.push("thumbnail = ?"); values.push(updates.thumbnail); }
   if (updates.active !== undefined) { fields.push("active = ?"); values.push(updates.active ? 1 : 0); }
-  if (!fields.length) return getVideoById(id);
+  if (!fields.length) return await getVideoById(id);
   values.push(id);
   db.run(`UPDATE videos SET ${fields.join(", ")} WHERE id = ?`, values);
   saveDB();
-  return getVideoById(id);
+  return await getVideoById(id);
 }
 
-export function deleteVideo(id) {
+export async function deleteVideo(id) {
+  await ensureDB();
   const info = db.run("DELETE FROM videos WHERE id = ?", [id]);
   saveDB();
   return info.changes > 0;
@@ -112,41 +130,47 @@ export function deleteVideo(id) {
 
 /* ── Feedback ── */
 
-export function getAllFeedback() {
+export async function getAllFeedback() {
+  await ensureDB();
   return query("SELECT * FROM feedback ORDER BY createdAt DESC");
 }
 
-export function getApprovedFeedback() {
+export async function getApprovedFeedback() {
+  await ensureDB();
   return query("SELECT * FROM feedback WHERE status = 'approved' ORDER BY createdAt DESC");
 }
 
-export function getFeedbackById(id) {
+export async function getFeedbackById(id) {
+  await ensureDB();
   const rows = query("SELECT * FROM feedback WHERE id = ?", [id]);
   return rows.length ? rows[0] : null;
 }
 
-export function createFeedback(data) {
+export async function createFeedback(data) {
+  await ensureDB();
   const id = crypto.randomUUID();
   db.run(
     "INSERT INTO feedback (id, text, author, child_age, rating, status, createdAt) VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'))",
     [id, data.text, data.author || "Anonymous", data.child_age || null, data.rating || 5]
   );
   saveDB();
-  return getFeedbackById(id);
+  return await getFeedbackById(id);
 }
 
-export function updateFeedback(id, updates) {
+export async function updateFeedback(id, updates) {
+  await ensureDB();
   const fields = [];
   const values = [];
   if (updates.status) { fields.push("status = ?"); values.push(updates.status); }
-  if (!fields.length) return getFeedbackById(id);
+  if (!fields.length) return await getFeedbackById(id);
   values.push(id);
   db.run(`UPDATE feedback SET ${fields.join(", ")} WHERE id = ?`, values);
   saveDB();
-  return getFeedbackById(id);
+  return await getFeedbackById(id);
 }
 
-export function deleteFeedback(id) {
+export async function deleteFeedback(id) {
+  await ensureDB();
   const info = db.run("DELETE FROM feedback WHERE id = ?", [id]);
   saveDB();
   return info.changes > 0;

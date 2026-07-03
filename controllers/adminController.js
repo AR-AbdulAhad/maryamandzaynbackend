@@ -12,7 +12,7 @@ export function login(req, res) {
   return res.status(401).json({ error: "Invalid credentials" });
 }
 
-export function addVideo(req, res) {
+export async function addVideo(req, res) {
   const { title, youtubeUrl, thumbnail } = req.body;
   if (!title || !youtubeUrl) {
     return res.status(400).json({ error: "Title and YouTube URL are required" });
@@ -21,7 +21,7 @@ export function addVideo(req, res) {
   if (!youtubeId) {
     return res.status(400).json({ error: "Invalid YouTube URL" });
   }
-  const video = createVideo({
+  const video = await createVideo({
     title,
     youtubeUrl,
     youtubeId,
@@ -30,7 +30,7 @@ export function addVideo(req, res) {
   return res.status(201).json({ video });
 }
 
-export function editVideo(req, res) {
+export async function editVideo(req, res) {
   const { title, youtubeUrl, thumbnail, active } = req.body;
   const updates = {};
   if (title) updates.title = title;
@@ -42,13 +42,13 @@ export function editVideo(req, res) {
   }
   if (thumbnail !== undefined) updates.thumbnail = thumbnail;
   if (active !== undefined) updates.active = active;
-  const video = updateVideo(req.params.id, updates);
+  const video = await updateVideo(req.params.id, updates);
   if (!video) return res.status(404).json({ error: "Video not found" });
   return res.json({ video });
 }
 
-export function removeVideo(req, res) {
-  const ok = deleteVideo(req.params.id);
+export async function removeVideo(req, res) {
+  const ok = await deleteVideo(req.params.id);
   if (!ok) return res.status(404).json({ error: "Video not found" });
   return res.json({ message: "Deleted" });
 }

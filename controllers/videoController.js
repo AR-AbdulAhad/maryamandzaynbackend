@@ -1,7 +1,8 @@
 import { getActiveVideos, getAllVideos, getVideoById } from "../config/db.js";
 
-export function listActiveVideos(req, res) {
-  const videos = getActiveVideos().map((v) => ({
+export async function listActiveVideos(req, res) {
+  const items = await getActiveVideos();
+  const videos = items.map((v) => ({
     id: v.id,
     title: v.title,
     youtubeId: v.youtubeId,
@@ -12,8 +13,9 @@ export function listActiveVideos(req, res) {
   return res.json({ videos });
 }
 
-export function listAllVideos(req, res) {
-  const videos = getAllVideos().map((v) => ({
+export async function listAllVideos(req, res) {
+  const items = await getAllVideos();
+  const videos = items.map((v) => ({
     id: v.id,
     title: v.title,
     youtubeId: v.youtubeId,
@@ -26,8 +28,8 @@ export function listAllVideos(req, res) {
   return res.json({ videos });
 }
 
-export function getVideo(req, res) {
-  const video = getVideoById(req.params.id);
+export async function getVideo(req, res) {
+  const video = await getVideoById(req.params.id);
   if (!video) return res.status(404).json({ error: "Video not found" });
   return res.json({ video });
 }

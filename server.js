@@ -4,6 +4,7 @@ import cors from "cors";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { existsSync } from "fs";
+import { initDB } from "./config/db.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
@@ -48,6 +49,10 @@ if (existsSync(publicPath)) {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+async function start() {
+  await initDB();
+  app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
+start();

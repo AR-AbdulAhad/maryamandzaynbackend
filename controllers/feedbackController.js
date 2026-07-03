@@ -6,8 +6,9 @@ import {
   deleteFeedback,
 } from "../config/db.js";
 
-export function listApprovedFeedback(req, res) {
-  const list = getApprovedFeedback().map((f) => ({
+export async function listApprovedFeedback(req, res) {
+  const items = await getApprovedFeedback();
+  const list = items.map((f) => ({
     id: f.id,
     text: f.text,
     author: f.author,
@@ -18,8 +19,9 @@ export function listApprovedFeedback(req, res) {
   return res.json(list);
 }
 
-export function listAllFeedback(req, res) {
-  const list = getAllFeedback().map((f) => ({
+export async function listAllFeedback(req, res) {
+  const items = await getAllFeedback();
+  const list = items.map((f) => ({
     id: f.id,
     text: f.text,
     author: f.author,
@@ -31,35 +33,35 @@ export function listAllFeedback(req, res) {
   return res.json(list);
 }
 
-export function submitFeedback(req, res) {
+export async function submitFeedback(req, res) {
   const { text, author, child_age, rating } = req.body;
   if (!text || text.trim().length < 2) {
     return res.status(400).json({ error: "Feedback text is required" });
   }
-  const feedback = createFeedback({ text, author, child_age, rating });
+  const feedback = await createFeedback({ text, author, child_age, rating });
   return res.status(201).json({ feedback });
 }
 
-export function approveFeedback(req, res) {
-  const feedback = updateFeedback(req.params.id, { status: "approved" });
+export async function approveFeedback(req, res) {
+  const feedback = await updateFeedback(req.params.id, { status: "approved" });
   if (!feedback) return res.status(404).json({ error: "Feedback not found" });
   return res.json({ feedback });
 }
 
-export function rejectFeedback(req, res) {
-  const feedback = updateFeedback(req.params.id, { status: "rejected" });
+export async function rejectFeedback(req, res) {
+  const feedback = await updateFeedback(req.params.id, { status: "rejected" });
   if (!feedback) return res.status(404).json({ error: "Feedback not found" });
   return res.json({ feedback });
 }
 
-export function restoreFeedback(req, res) {
-  const feedback = updateFeedback(req.params.id, { status: "pending" });
+export async function restoreFeedback(req, res) {
+  const feedback = await updateFeedback(req.params.id, { status: "pending" });
   if (!feedback) return res.status(404).json({ error: "Feedback not found" });
   return res.json({ feedback });
 }
 
-export function removeFeedback(req, res) {
-  const ok = deleteFeedback(req.params.id);
+export async function removeFeedback(req, res) {
+  const ok = await deleteFeedback(req.params.id);
   if (!ok) return res.status(404).json({ error: "Feedback not found" });
   return res.json({ message: "Deleted" });
 }
