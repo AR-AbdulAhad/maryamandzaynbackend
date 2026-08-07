@@ -5,8 +5,11 @@ export async function listActiveVideos(req, res) {
   const videos = items.map((v) => ({
     id: v.id,
     title: v.title,
+    type: v.type || "youtube",
     youtubeId: v.youtubeId,
     youtubeUrl: v.youtubeUrl,
+    media: v.media,
+    mediaUrl: v.media ? `/uploads/${v.media}` : "",
     thumbnail: v.thumbnail,
     order: v.order,
   }));
@@ -18,8 +21,11 @@ export async function listAllVideos(req, res) {
   const videos = items.map((v) => ({
     id: v.id,
     title: v.title,
+    type: v.type || "youtube",
     youtubeId: v.youtubeId,
     youtubeUrl: v.youtubeUrl,
+    media: v.media,
+    mediaUrl: v.media ? `/uploads/${v.media}` : "",
     thumbnail: v.thumbnail,
     active: v.active,
     order: v.order,

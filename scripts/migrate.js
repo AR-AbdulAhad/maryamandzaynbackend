@@ -14,15 +14,24 @@ async function migrate() {
 
   // Ensure tables exist
   db.run(`CREATE TABLE IF NOT EXISTS videos (
-    id TEXT PRIMARY KEY, title TEXT NOT NULL, youtubeUrl TEXT NOT NULL,
-    youtubeId TEXT NOT NULL, thumbnail TEXT DEFAULT '',
+    id TEXT PRIMARY KEY, title TEXT NOT NULL, type TEXT DEFAULT 'youtube',
+    youtubeUrl TEXT DEFAULT '', youtubeId TEXT DEFAULT '', media TEXT DEFAULT '',
+    thumbnail TEXT DEFAULT '',
     active INTEGER DEFAULT 1, "order" INTEGER DEFAULT 0,
     createdAt TEXT DEFAULT (datetime('now'))
   )`);
+  try { db.run(`ALTER TABLE videos ADD COLUMN type TEXT DEFAULT 'youtube'`); } catch (e) {}
+  try { db.run(`ALTER TABLE videos ADD COLUMN media TEXT DEFAULT ''`); } catch (e) {}
   db.run(`CREATE TABLE IF NOT EXISTS feedback (
     id TEXT PRIMARY KEY, text TEXT NOT NULL, author TEXT DEFAULT 'Anonymous',
     child_age TEXT DEFAULT NULL, rating INTEGER DEFAULT 5,
     status TEXT DEFAULT 'pending', createdAt TEXT DEFAULT (datetime('now'))
+  )`);
+  db.run(`CREATE TABLE IF NOT EXISTS news (
+    id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT DEFAULT '',
+    image TEXT DEFAULT '', tagline TEXT DEFAULT '', button_text TEXT DEFAULT 'Learn Now',
+    button_link TEXT DEFAULT '', active INTEGER DEFAULT 1,
+    "order" INTEGER DEFAULT 0, createdAt TEXT DEFAULT (datetime('now'))
   )`);
 
   // Migrate videos
@@ -36,8 +45,8 @@ async function migrate() {
       stmt.free();
       if (!exists) {
         db.run(
-          'INSERT INTO videos (id, title, youtubeUrl, youtubeId, thumbnail, active, "order", createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [v.id, v.title, v.youtubeUrl, v.youtubeId, v.thumbnail || "", v.active ? 1 : 0, v.order, v.createdAt]
+          'INSERT INTO videos (id, title, type, youtubeUrl, youtubeId, media, thumbnail, active, "order", createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [v.id, v.title, v.type || "youtube", v.youtubeUrl, v.youtubeId, v.media || "", v.thumbnail || "", v.active ? 1 : 0, v.order, v.createdAt]
         );
       }
     }

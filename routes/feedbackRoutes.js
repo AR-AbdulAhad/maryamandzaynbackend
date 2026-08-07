@@ -3,6 +3,7 @@ import {
   listApprovedFeedback,
   listAllFeedback,
   submitFeedback,
+  addFeedbackAdmin,
   approveFeedback,
   rejectFeedback,
   restoreFeedback,
@@ -14,6 +15,7 @@ const router = Router();
 
 router.get("/approved", listApprovedFeedback);
 router.post("/", submitFeedback);
+router.post("/admin", verifyToken, addFeedbackAdmin);
 router.get("/", verifyToken, listAllFeedback);
 router.patch("/:id/approve", verifyToken, approveFeedback);
 router.patch("/:id/reject", verifyToken, rejectFeedback);

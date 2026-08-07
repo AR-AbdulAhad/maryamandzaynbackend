@@ -9,6 +9,9 @@ import { initDB } from "./config/db.js";
 import videoRoutes from "./routes/videoRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import feedbackRoutes from "./routes/feedbackRoutes.js";
+import newsRoutes from "./routes/newsRoutes.js";
+import popularRoutes from "./routes/popularRoutes.js";
+import heroRoutes from "./routes/heroRoutes.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -50,6 +53,9 @@ app.use("/uploads", express.static(join(__dirname, "uploads")));
 app.use("/api/videos", videoRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/news", newsRoutes);
+app.use("/api/popular", popularRoutes);
+app.use("/api/hero", heroRoutes);
 
 app.get("/admin", (req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
@@ -63,6 +69,9 @@ app.get("*", (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err.message);
+  if (err.name === "MulterError") {
+    return res.status(400).json({ error: `Upload failed: ${err.message}` });
+  }
   res.status(500).json({ error: "Internal server error" });
 });
 

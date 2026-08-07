@@ -42,6 +42,15 @@ export async function submitFeedback(req, res) {
   return res.status(201).json({ feedback });
 }
 
+export async function addFeedbackAdmin(req, res) {
+  const { text, author, child_age, rating } = req.body;
+  if (!text || text.trim().length < 2) {
+    return res.status(400).json({ error: "Feedback text is required" });
+  }
+  const feedback = await createFeedback({ text, author, child_age, rating, status: "approved" });
+  return res.status(201).json({ feedback });
+}
+
 export async function approveFeedback(req, res) {
   const feedback = await updateFeedback(req.params.id, { status: "approved" });
   if (!feedback) return res.status(404).json({ error: "Feedback not found" });
