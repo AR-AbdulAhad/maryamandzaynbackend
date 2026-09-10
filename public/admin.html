@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Video Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Fredoka One', sans-serif; background: #f5f0ff; color: #4A2580; }
+.navbar {
+  background: linear-gradient(180deg, #F07A20 0%, #F5A623 50%, #FFD000 100%);
+  padding: 16px 24px;
+  box-shadow: 0 4px 0 #E06800;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.navbar h1 { font-size: 24px; color: #4A2580; }
+.navbar button {
+  background: #4A2580; color: white; border: none; padding: 8px 20px;
+  border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 14px;
+}
+.login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: #f5f0ff;
+}
+.login-box {
+  background: white; padding: 40px; border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(74,37,128,0.15);
+  width: 90%; max-width: 380px; text-align: center;
+}
+.login-box h2 { margin-bottom: 24px; }
+.login-box input {
+  width: 100%; padding: 12px 16px; margin-bottom: 12px;
+  border: 2px solid #e0d0f0; border-radius: 12px;
+  font-family: inherit; font-size: 14px; outline: none;
+}
+.login-box input:focus { border-color: #7B00D1; }
+.login-box .error { color: #e74c3c; font-size: 12px; margin-bottom: 8px; }
+.login-box button {
+  width: 100%; padding: 12px; background: #4A2580; color: white;
+  border: none; border-radius: 50px; font-family: inherit; font-size: 16px;
+  cursor: pointer; transition: all 0.2s;
+}
+.login-box button:hover { background: #5D00A1; }
+.login-box button:active { transform: scale(0.97); }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.header-bar h2 { font-size: 28px; }
+.add-btn {
+  background: #6EE7B7; color: #4A2580; border: none; padding: 12px 28px;
+  border-radius: 50px; cursor: pointer; font-family: inherit; font-size: 16px;
+  box-shadow: 0 4px 0 #059669; transition: all 0.2s;
+}
+.add-btn:hover { transform: translateY(-2px); }
+.add-btn:active { transform: translateY(2px); box-shadow: none; }
+.videos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.video-card {
+  background: white; border-radius: 20px; overflow: hidden;
+  box-shadow: 0 6px 20px rgba(74,37,128,0.12); transition: all 0.3s;
+}
+.video-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(74,37,128,0.2); }
+.video-thumb { width: 100%; aspect-ratio: 16/9; background: #f0e8ff; position: relative; overflow: hidden; }
+.video-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.video-thumb .play-icon {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.15); font-size: 48px; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.video-info { padding: 16px; }
+.video-info h3 { font-size: 18px; margin-bottom: 6px; }
+.video-info .url { font-size: 11px; color: #888; word-break: break-all; margin-bottom: 8px; font-family: monospace; font-weight: normal; }
+.video-info .badge {
+  display: inline-block; padding: 3px 10px; border-radius: 50px; font-size: 11px; margin-bottom: 10px;
+}
+.badge-active { background: #d4edda; color: #155724; }
+.badge-inactive { background: #f8d7da; color: #721c24; }
+.video-actions { display: flex; gap: 8px; }
+.video-actions button {
+  flex: 1; padding: 8px; border: none; border-radius: 12px;
+  cursor: pointer; font-family: inherit; font-size: 13px; transition: all 0.2s;
+}
+.btn-edit { background: #FFD000; color: #4A2580; }
+.btn-delete { background: #e74c3c; color: white; }
+.btn-toggle { background: #f0e8ff; color: #4A2580; }
+.video-actions button:hover { opacity: 0.85; }
+.video-actions button:active { transform: scale(0.95); }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: none; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: white; border-radius: 24px; padding: 32px; width: 90%; max-width: 480px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal h3 { font-size: 22px; margin-bottom: 20px; }
+.modal label { display: block; font-size: 13px; margin-bottom: 4px; color: #666; }
+.modal input {
+  width: 100%; padding: 10px 14px; margin-bottom: 14px;
+  border: 2px solid #e0d0f0; border-radius: 12px;
+  font-family: inherit; font-size: 14px; outline: none;
+}
+.modal input:focus { border-color: #7B00D1; }
+.modal-actions { display: flex; gap: 10px; margin-top: 8px; }
+.modal-actions button {
+  flex: 1; padding: 10px; border: none; border-radius: 50px;
+  cursor: pointer; font-family: inherit; font-size: 15px; transition: all 0.2s;
+}
+.btn-save { background: #4A2580; color: white; }
+.btn-cancel { background: #f0e8ff; color: #4A2580; }
+.btn-save:active, .btn-cancel:active { transform: scale(0.95); }
+.empty { text-align: center; padding: 60px 20px; color: #aaa; font-size: 18px; }
+.toast {
+  position: fixed; bottom: 24px; right: 24px; background: #4A2580; color: white;
+  padding: 14px 24px; border-radius: 12px; font-size: 14px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2); display: none; z-index: 2000;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div id="login-screen" class="login-screen">
+  <div class="login-box">
+    <h2>Admin Login</h2>
+    <input id="login-user" type="text" placeholder="Username" autocomplete="off">
+    <input id="login-pass" type="password" placeholder="Password">
+    <div id="login-error" class="error"></div>
+    <button onclick="handleLogin()">Login</button>
+  </div>
+</div>
+
+<div id="admin-app" style="display:none">
+  <nav class="navbar">
+    <h1>🎬 Video Manager</h1>
+    <button onclick="handleLogout()">Logout</button>
+  </nav>
+  <div class="container">
+    <div class="header-bar">
+      <h2>All Videos</h2>
+      <button class="add-btn" onclick="openAddModal()">+ Add Video</button>
+    </div>
+    <div id="videos-container" class="videos-grid"></div>
+  </div>
+</div>
+
+<div id="video-modal" class="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Add Video</h3>
+    <label>Video Title</label>
+    <input id="modal-title-input" type="text" placeholder="e.g. The Loud Whisper">
+    <label>YouTube URL</label>
+    <input id="modal-url-input" type="text" placeholder="https://www.youtube.com/watch?v=...">
+    <label>Thumbnail URL (optional)</label>
+    <input id="modal-thumb-input" type="text" placeholder="https://example.com/thumb.jpg">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveVideo()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API = "/api/admin";
+let token = localStorage.getItem("admin_token") || "";
+let editingId = null;
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => t.style.display = "none", 3000);
+}
+
+function handleLogin() {
+  const user = document.getElementById("login-user").value;
+  const pass = document.getElementById("login-pass").value;
+  document.getElementById("login-error").textContent = "";
+  fetch(`${API}/login`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username: user, password: pass })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.token) {
+      token = d.token; localStorage.setItem("admin_token", token);
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("admin-app").style.display = "block";
+      loadVideos();
+    } else {
+      document.getElementById("login-error").textContent = "Invalid credentials";
+    }
+  })
+  .catch(() => document.getElementById("login-error").textContent = "Server error");
+}
+
+function handleLogout() {
+  token = ""; localStorage.removeItem("admin_token");
+  document.getElementById("admin-app").style.display = "none";
+  document.getElementById("login-screen").style.display = "flex";
+}
+
+function authFetch(url, opts = {}) {
+  return fetch(url, {
+    ...opts,
+    headers: { ...opts.headers, "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+  });
+}
+
+function loadVideos() {
+  authFetch(`${API}/videos`)
+  .then(r => { if (r.status === 401) { handleLogout(); return null; } return r.json(); })
+  .then(d => {
+    if (!d) return;
+    const c = document.getElementById("videos-container");
+    if (!d.videos.length) { c.innerHTML = '<div class="empty">No videos yet. Click "Add Video" to start.</div>'; return; }
+    c.innerHTML = d.videos.map(v => `
+      <div class="video-card">
+        <div class="video-thumb">
+          ${v.thumbnail ? `<img src="${v.thumbnail}" alt="${v.title}">` : ""}
+          <div class="play-icon">▶</div>
+        </div>
+        <div class="video-info">
+          <h3>${esc(v.title)}</h3>
+          <div class="url">${esc(v.youtubeUrl)}</div>
+          <span class="badge ${v.active ? 'badge-active' : 'badge-inactive'}">${v.active ? 'Active' : 'Inactive'}</span>
+          <div class="video-actions">
+            <button class="btn-toggle" onclick="toggleVideo('${v.id}', ${!v.active})">
+              ${v.active ? 'Deactivate' : 'Activate'}
+            </button>
+            <button class="btn-edit" onclick="openEditModal('${v.id}')">Edit</button>
+            <button class="btn-delete" onclick="deleteVideo('${v.id}')">Delete</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+  });
+}
+
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modal-title").textContent = "Add Video";
+  document.getElementById("modal-title-input").value = "";
+  document.getElementById("modal-url-input").value = "";
+  document.getElementById("modal-thumb-input").value = "";
+  document.getElementById("video-modal").classList.add("active");
+}
+
+function openEditModal(id) {
+  editingId = id;
+  authFetch(`${API}/videos`).then(r => r.json()).then(d => {
+    const v = d.videos.find(x => x.id === id);
+    if (!v) return;
+    document.getElementById("modal-title").textContent = "Edit Video";
+    document.getElementById("modal-title-input").value = v.title;
+    document.getElementById("modal-url-input").value = v.youtubeUrl;
+    document.getElementById("modal-thumb-input").value = v.thumbnail || "";
+    document.getElementById("video-modal").classList.add("active");
+  });
+}
+
+function closeModal() {
+  document.getElementById("video-modal").classList.remove("active");
+  editingId = null;
+}
+
+function saveVideo() {
+  const title = document.getElementById("modal-title-input").value.trim();
+  const url = document.getElementById("modal-url-input").value.trim();
+  const thumb = document.getElementById("modal-thumb-input").value.trim();
+  if (!title || !url) { showToast("Title and YouTube URL are required"); return; }
+  const body = { title, youtubeUrl: url, thumbnail: thumb };
+  const endpoint = editingId ? `${API}/videos/${editingId}` : `${API}/videos`;
+  const method = editingId ? "PUT" : "POST";
+  authFetch(endpoint, { method, body: JSON.stringify(body) })
+  .then(r => { if (!r.ok) return r.json().then(e => { throw new Error(e.error) }); return r.json(); })
+  .then(() => { closeModal(); loadVideos(); showToast(editingId ? "Video updated" : "Video added"); })
+  .catch(e => showToast(e.message));
+}
+
+function deleteVideo(id) {
+  if (!confirm("Delete this video?")) return;
+  authFetch(`${API}/videos/${id}`, { method: "DELETE" })
+  .then(r => { if (!r.ok) throw new Error("Failed"); loadVideos(); showToast("Video deleted"); })
+  .catch(e => showToast(e.message));
+}
+
+function toggleVideo(id, active) {
+  authFetch(`${API}/videos/${id}`, { method: "PUT", body: JSON.stringify({ active }) })
+  .then(r => { if (!r.ok) throw new Error("Failed"); loadVideos(); showToast(active ? "Activated" : "Deactivated"); })
+  .catch(e => showToast(e.message));
+}
+
+if (token) {
+  authFetch(`${API}/videos`).then(r => {
+    if (r.ok) {
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("admin-app").style.display = "block";
+      loadVideos();
+    } else { handleLogout(); }
+  }).catch(() => {});
+}
+</script>
+</body>
+</html>

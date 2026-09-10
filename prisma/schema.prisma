@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Video {
+  id         String   @id @default(uuid())
+  title      String
+  type       String   @default("youtube")
+  youtubeUrl String?  @map("youtubeUrl")
+  youtubeId  String?
+  thumbnail  String   @default("")
+  media      String?
+  active     Boolean  @default(true)
+  order      Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("videos")
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  text      String   @db.Text
+  author    String   @default("Anonymous")
+  childAge  String?  @map("child_age")
+  rating    Int      @default(5)
+  status    String   @default("pending")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("feedback")
+}
+
+model Setting {
+  key   String @id
+  value String @default("")
+
+  @@map("settings")
+}
+
+model News {
+  id          String   @id @default(uuid())
+  title       String
+  description String   @default("") @db.Text
+  image       String   @default("")
+  tagline     String   @default("")
+  buttonText  String   @default("") @map("button_text")
+  buttonLink  String   @default("") @map("button_link")
+  active      Boolean  @default(true)
+  order       Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("news")
+}
+
+model PopularVideo {
+  id         String   @id @default(uuid())
+  title      String
+  youtubeUrl String   @map("youtubeUrl")
+  youtubeId  String   @map("youtubeId")
+  thumbnail  String   @default("")
+  active     Boolean  @default(true)
+  order      Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("popular_videos")
+}
